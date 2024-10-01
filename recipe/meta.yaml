@@ -10,7 +10,7 @@ source:
   sha256: 27c74119900b186361cb4ccdd040eaf9383bc41f7b3781706600891df2c7c6e3
 
 build:
-  skip: True  # [py<310 or py>=311]
+  skip: True  # [py<310 or py>=311 or win or s390x]
   entry_points:
     - greykite=greykite.cli:main
   script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
@@ -24,8 +24,7 @@ requirements:
     - wheel
   run:
     - python
-    - cvxpy >=1.2.1  # [not win]
-    - cvxpy-base >=1.2.1  # [win]
+    - cvxpy >=1.2.1
     - dill >=0.3.1.1
     - holidays <0.25
     - holidays-ext >=0.0.7
