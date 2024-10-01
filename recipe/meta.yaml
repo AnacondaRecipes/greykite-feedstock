@@ -25,7 +25,7 @@ requirements:
   run:
     - python
     - cvxpy >=1.2.1  # [not win]
-    - cvxpy-base >= 1.2.1  # [win]
+    - cvxpy-base >=1.2.1  # [win]
     - dill >=0.3.1.1
     - holidays <0.25
     - holidays-ext >=0.0.7
