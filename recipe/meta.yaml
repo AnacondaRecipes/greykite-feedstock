@@ -14,7 +14,7 @@ source:
 build:
   # missing scs package for windows
   # missing holidays-ext package for s390x
-  skip: True  # [py<310 or py>=312 or win or s390x]
+  skip: True  # [py<310 or py>=311 or win or s390x]
   entry_points:
     - greykite=greykite.cli:main
   script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
