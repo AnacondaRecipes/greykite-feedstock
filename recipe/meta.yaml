@@ -8,9 +8,13 @@ package:
 source:
   url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/greykite-{{ version }}.tar.gz
   sha256: 27c74119900b186361cb4ccdd040eaf9383bc41f7b3781706600891df2c7c6e3
+  patches:
+    0001-setup.patch
 
 build:
-  skip: True  # [py<310 or py>=311 or win or s390x]
+  # missing scs package for windows
+  # missing holidays-ext package for s390x
+  skip: True  # [py<310 or py>=312 or win or s390x]
   entry_points:
     - greykite=greykite.cli:main
   script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
@@ -22,40 +26,56 @@ requirements:
     - pytest-runner
     - pip
     - wheel
+    - setuptools
   run:
     - python
-    - setuptools
     - cvxpy >=1.2.1
     - dill >=0.3.1.1
     - holidays <0.25
     - holidays-ext >=0.0.7
     - ipython >=7.31.1
     - matplotlib-base >=3.4.1
-    - numpy >=1.22.0,<1.25.0
+    - numpy >=1.22.0,<1.24.0a0 # Adding upper bound due to use of "old" np.float
     - osqp >=0.6.2
     - overrides >=2.8.0
     - pandas >=1.5.0,<2.0.0
     - patsy >=0.5.1
     - plotly >=4.12.0
-    - pmdarima >=1.8.0,<=1.8.5
-    - pytest >=4.6.5
+    - pmdarima >=1.8.0 # Removing upper bound as it doesn't breat anything
     - pytest-runner >=5.1
     - scipy >=1.5.4,<1.11.0
     - six >=1.15.0
-    - scikit-learn >=0.24.1
+    - scikit-learn >=0.24.1,<1.4.0a0 # Adding upper bound due to greykite/tests/detection tests failing with >1.4
     - statsmodels >=0.12.2
     - testfixtures >=6.14.2
     - tqdm >=4.52.0
 
+{% set tests_to_skip = "" %}
+# Skip following due to new version of holidays-ext containing more data
+{% set tests_to_skip = tests_to_skip + "test_get_available_holiday_lookup_countries or " %}
+{% set tests_to_skip = tests_to_skip + "test_get_available_holidays_in_countries or " %}
+{% set tests_to_skip = tests_to_skip + "test_forecast_silverkite_with_holidays_effect or " %}
+{% set tests_to_skip = tests_to_skip + "test_get_available_holidays_across_countries or " %}
+{% set tests_to_skip = tests_to_skip + "test_daily_data_diff_params or " %}
+{% set tests_to_skip = tests_to_skip + "test_extra_pred_cols or " %}
+# Skip following due to approximation errors
+{% set tests_to_skip = tests_to_skip + "test_forecast_silverkite_simulator or " %}
+{% set tests_to_skip = tests_to_skip + "test_forecast_silverkite_with_true_lagged_regressor or " %}
+{% set tests_to_skip = tests_to_skip + "test_forecast_similarity_based" %}
+
 test:
+  source_files:
+    - greykite/tests
   imports:
     - greykite
   commands:
     - pip check
+    - pytest greykite/tests -vv -k "not ({{ tests_to_skip }})"
     # cli is broken upstream
     # - greykite --help
   requires:
     - pip
+    - pytest >=3
 
 about:
   home: https://github.com/linkedin/greykite
