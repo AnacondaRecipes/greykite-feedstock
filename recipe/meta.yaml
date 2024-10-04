@@ -21,6 +21,8 @@ build:
   number: 0
 
 requirements:
+  build:
+    - patch  # [not win]
   host:
     - python
     - pytest-runner
@@ -41,8 +43,7 @@ requirements:
     - pandas >=1.5.0,<2.0.0
     - patsy >=0.5.1
     - plotly >=4.12.0
-    - pmdarima >=1.8.0 # Removing upper bound as it doesn't breat anything
-    - pytest-runner >=5.1
+    - pmdarima >=1.8.0,<=1.8.5
     - scipy >=1.5.4,<1.11.0
     - six >=1.15.0
     - scikit-learn >=0.24.1,<1.4.0a0 # Adding upper bound due to greykite/tests/detection tests failing with >1.4
