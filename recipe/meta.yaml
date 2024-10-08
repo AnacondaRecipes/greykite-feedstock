@@ -9,11 +9,12 @@ source:
   url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/greykite-{{ version }}.tar.gz
   sha256: 27c74119900b186361cb4ccdd040eaf9383bc41f7b3781706600891df2c7c6e3
   patches:
-    0001-setup.patch
+    - patches/0001-setup.patch
 
 build:
   # missing scs package for windows
   # missing holidays-ext package for s390x
+  # building for py==310 only because <310 is incompatible with greykite and >310 is incompatible with cvxpy
   skip: True  # [py<310 or py>=311 or win or s390x]
   entry_points:
     - greykite=greykite.cli:main
