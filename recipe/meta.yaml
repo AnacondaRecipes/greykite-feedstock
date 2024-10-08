@@ -8,59 +8,91 @@ package:
 source:
   url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/greykite-{{ version }}.tar.gz
   sha256: 27c74119900b186361cb4ccdd040eaf9383bc41f7b3781706600891df2c7c6e3
+  patches:
+    - patches/0001-setup.patch
 
 build:
+  # missing scs package for windows
+  # missing holidays-ext package for s390x
+  # building for py==310 only because <310 is incompatible with greykite and >310 is incompatible with cvxpy
+  skip: True  # [py<310 or py>=311 or win or s390x]
   entry_points:
     - greykite=greykite.cli:main
-  noarch: python
   script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
   number: 0
 
 requirements:
+  build:
+    - patch  # [not win]
   host:
-    - python >=3.10
+    - python
     - pytest-runner
     - pip
+    - wheel
+    - setuptools
   run:
-    - python >=3.10
+    - python
     - cvxpy >=1.2.1
     - dill >=0.3.1.1
     - holidays <0.25
     - holidays-ext >=0.0.7
     - ipython >=7.31.1
     - matplotlib-base >=3.4.1
-    - numpy >=1.22.0,<1.25.0
+    - numpy >=1.22.0,<1.24.0a0 # Adding upper bound due to use of "old" np.float
     - osqp >=0.6.2
     - overrides >=2.8.0
     - pandas >=1.5.0,<2.0.0
     - patsy >=0.5.1
     - plotly >=4.12.0
     - pmdarima >=1.8.0,<=1.8.5
-    - pytest >=4.6.5
-    - pytest-runner >=5.1
     - scipy >=1.5.4,<1.11.0
     - six >=1.15.0
-    - scikit-learn >=0.24.1
+    - scikit-learn >=0.24.1,<1.4.0a0 # Adding upper bound due to greykite/tests/detection tests failing with >1.4
     - statsmodels >=0.12.2
     - testfixtures >=6.14.2
     - tqdm >=4.52.0
+  run_constrained:
+    # mkl variant pulls in intel-openmp which conflicts with llvm-openmp. i.e. force to use openblas variant of numpy, scipy, etc.
+    - blas=*=openblas  # [osx and x86_64]
+
+{% set tests_to_skip = "" %}
+# Skip following due to new version of holidays-ext containing more data
+{% set tests_to_skip = tests_to_skip + "test_get_available_holiday_lookup_countries or " %}
+{% set tests_to_skip = tests_to_skip + "test_get_available_holidays_in_countries or " %}
+{% set tests_to_skip = tests_to_skip + "test_forecast_silverkite_with_holidays_effect or " %}
+{% set tests_to_skip = tests_to_skip + "test_get_available_holidays_across_countries or " %}
+{% set tests_to_skip = tests_to_skip + "test_daily_data_diff_params or " %}
+{% set tests_to_skip = tests_to_skip + "test_extra_pred_cols or " %}
+# Skip following due to approximation errors
+{% set tests_to_skip = tests_to_skip + "test_forecast_silverkite_simulator or " %}
+{% set tests_to_skip = tests_to_skip + "test_forecast_silverkite_with_true_lagged_regressor or " %}
+{% set tests_to_skip = tests_to_skip + "test_forecast_silverkite_predict_via_sim or " %}
+{% set tests_to_skip = tests_to_skip + "test_run_template_7 or " %}
+{% set tests_to_skip = tests_to_skip + "test_forecast_similarity_based" %}
 
 test:
+  source_files:
+    - greykite/tests
   imports:
     - greykite
   commands:
-    # cvxpy which is an indirect depdendency has bad deps
-    # - pip check
+    - pip check
+    - pytest greykite/tests -vv -k "not ({{ tests_to_skip }})"
     # cli is broken upstream
     # - greykite --help
   requires:
     - pip
+    - pytest >=3
 
 about:
   home: https://github.com/linkedin/greykite
   summary: A python package for flexible forecasting
   license: BSD-2-Clause
+  license_family: BSD
   license_file: LICENSE
+  dev_url: https://github.com/linkedin/greykite
+  doc_url: https://linkedin.github.io/greykite/docs/0.1.0/html/index.html
+  description: The Greykite library provides flexible, intuitive and fast forecasts through its flagship algorithm, Silverkite.
 
 extra:
   recipe-maintainers:
