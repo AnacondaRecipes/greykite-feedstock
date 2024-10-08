@@ -50,6 +50,9 @@ requirements:
     - statsmodels >=0.12.2
     - testfixtures >=6.14.2
     - tqdm >=4.52.0
+  run_constrained:
+    # mkl variant pulls in intel-openmp which conflicts with llvm-openmp. i.e. force to use openblas variant of numpy, scipy, etc.
+    - blas=*=openblas  # [osx and x86_64]
 
 {% set tests_to_skip = "" %}
 # Skip following due to new version of holidays-ext containing more data
